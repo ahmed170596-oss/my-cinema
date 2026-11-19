@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>مكتبتي السينمائية</title>
-  <!-- مكتبة تشغيل البث المباشر للقنوات -->
   <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif; }
@@ -17,6 +16,7 @@
       overflow: hidden;
     }
 
+    /* القائمة الجانبية */
     .sidebar {
       width: 260px;
       background-color: #161b26;
@@ -26,7 +26,84 @@
       padding: 18px 14px;
       overflow-y: auto;
       flex-shrink: 0;
+      transition: transform 0.25s ease;
     }
+
+    .sidebar-content {
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    .sidebar-header-mobile {
+      display: none;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #232a3b;
+    }
+    .close-sidebar-btn {
+      background: #232a3b;
+      color: #fff;
+      border: none;
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    /* قسم الفلتر العائلي أسفل القائمة */
+    .sidebar-footer {
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px solid #232a3b;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 13px;
+      color: #c7d0dd;
+    }
+
+    /* تصميم زر التبديل (Toggle Switch) */
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 42px;
+      height: 24px;
+      flex-shrink: 0;
+    }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      inset: 0;
+      background-color: #2b3448;
+      transition: 0.25s;
+      border-radius: 24px;
+    }
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      right: 3px;
+      bottom: 3px;
+      background-color: #ffffff;
+      transition: 0.25s;
+      border-radius: 50%;
+    }
+    input:checked + .slider { background-color: #22c55e; }
+    input:checked + .slider:before { transform: translateX(-18px); }
+
+    .sidebar-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.65);
+      z-index: 850;
+    }
+    .sidebar-overlay.open { display: block; }
 
     .tabs {
       display: flex;
@@ -69,24 +146,56 @@
       margin: 16px 12px 8px;
     }
 
+    /* المحتوى الرئيسي */
     .main {
       flex: 1;
       display: flex;
       flex-direction: column;
       overflow: hidden;
+      width: 100%;
     }
 
     .topbar {
-      height: 64px;
-      padding: 0 24px;
+      min-height: 64px;
+      padding: 10px 24px;
       display: flex;
       align-items: center;
       justify-content: space-between;
+      gap: 12px;
       border-bottom: 1px solid #1e2433;
       background-color: #0f1219;
       flex-shrink: 0;
     }
-    .topbar h2 { font-size: 18px; font-weight: 600; }
+
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .menu-btn {
+      display: none;
+      background: #1a202e;
+      border: 1px solid #2b3448;
+      color: #ffffff;
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      font-size: 20px;
+      cursor: pointer;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .topbar h2 {
+      font-size: 18px;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
 
     .search-box {
       background: #1a202e;
@@ -95,6 +204,7 @@
       padding: 8px 16px;
       color: #ffffff;
       width: 280px;
+      max-width: 100%;
       outline: none;
       font-size: 14px;
     }
@@ -118,7 +228,7 @@
       transition: transform 0.2s ease;
       outline: none;
     }
-    .card:hover, .card:focus { transform: scale(1.05); }
+    .card:hover, .card:focus { transform: scale(1.04); }
     .card:focus .poster, .card:focus .channel-logo-box { box-shadow: 0 0 0 3px #4f7cff; }
 
     .poster {
@@ -130,7 +240,6 @@
       display: block;
     }
 
-    /* تصميم بطاقة القنوات المباشرة */
     .channel-logo-box {
       width: 100%;
       aspect-ratio: 16 / 10;
@@ -192,7 +301,7 @@
       background: rgba(0, 0, 0, 0.92);
       z-index: 1000;
       flex-direction: column;
-      padding: 20px;
+      padding: 16px;
     }
     .modal.open { display: flex; }
 
@@ -201,7 +310,7 @@
       justify-content: space-between;
       align-items: center;
       margin-bottom: 12px;
-      gap: 12px;
+      gap: 10px;
       flex-wrap: wrap;
     }
     .modal-controls {
@@ -220,12 +329,19 @@
       font-size: 13px;
     }
     .ctrl-btn.active { background: #4f7cff; border-color: #4f7cff; }
+    .ctrl-btn.shield-on { background: #15803d; border-color: #22c55e; }
     .close-btn { background: #d9383a; border: none; font-weight: bold; }
-    .ctrl-input { width: 70px; text-align: center; cursor: text; }
+    .ctrl-input { width: 65px; text-align: center; cursor: text; }
 
+    .player-container {
+      flex: 1;
+      width: 100%;
+      display: flex;
+    }
     .player-frame, .live-video {
       flex: 1;
       width: 100%;
+      height: 100%;
       border: none;
       border-radius: 12px;
       background: #000;
@@ -238,43 +354,94 @@
       padding: 40px;
       font-size: 16px;
     }
+
+    /* تحسينات واجهة الموبايل */
+    @media (max-width: 768px) {
+      .menu-btn { display: flex; }
+      .sidebar-header-mobile { display: flex; }
+
+      .sidebar {
+        position: fixed;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        width: 270px;
+        z-index: 900;
+        transform: translateX(100%);
+        box-shadow: -4px 0 20px rgba(0, 0, 0, 0.6);
+      }
+      .sidebar.open { transform: translateX(0); }
+
+      .topbar { padding: 10px 14px; flex-wrap: wrap; }
+      .topbar-right { flex: 1; }
+      .topbar h2 { font-size: 16px; }
+      .search-box { width: 100%; order: 3; }
+
+      .grid {
+        padding: 14px;
+        grid-template-columns: repeat(auto-fill, minmax(135px, 1fr));
+        gap: 14px;
+      }
+      .card-title { font-size: 13px; }
+    }
   </style>
 </head>
 <body>
 
+  <div id="sidebarOverlay" class="sidebar-overlay" onclick="toggleSidebar(false)"></div>
+
   <!-- القائمة الجانبية -->
-  <aside class="sidebar">
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-header-mobile">
+      <strong style="font-size:15px;">القائمة</strong>
+      <button class="close-sidebar-btn" onclick="toggleSidebar(false)">✖</button>
+    </div>
+
     <div class="tabs">
       <button class="tab-btn active" onclick="switchTab('movie', this)">أفلام</button>
       <button class="tab-btn" onclick="switchTab('tv', this)">مسلسلات</button>
       <button class="tab-btn" onclick="switchTab('live', this)">مباشر</button>
     </div>
 
-    <!-- تصنيفات الأفلام والمسلسلات -->
-    <div id="vodSidebar">
-      <div class="nav-item" onclick="showFavorites(this)">⭐ المفضلة</div>
-      <div class="section-title">التصنيفات</div>
-      <div class="nav-item active" onclick="loadCategory('popular', this)">🔥 الأكثر شهرة</div>
-      <div class="nav-item" onclick="loadCategory('arabic', this)">🇪🇬 عربي</div>
-      <div class="nav-item" onclick="loadCategory('16', this)">🎨 أنيميشن</div>
-      <div class="nav-item" onclick="loadCategory('28', this)">💥 أكشن</div>
-      <div class="nav-item" onclick="loadCategory('35', this)">😂 كوميدي</div>
-      <div class="nav-item" onclick="loadCategory('18', this)">🎭 دراما</div>
-      <div class="nav-item" onclick="loadCategory('27', this)">👻 رعب</div>
+    <div class="sidebar-content">
+      <!-- تصنيفات الأفلام والمسلسلات -->
+      <div id="vodSidebar">
+        <div class="nav-item" onclick="showFavorites(this)">⭐ المفضلة</div>
+        <div class="section-title">التصنيفات</div>
+        <div class="nav-item active" onclick="loadCategory('popular', this)">🔥 الأكثر شهرة</div>
+        <div class="nav-item" onclick="loadCategory('arabic', this)">🇪🇬 عربي</div>
+        <div class="nav-item" onclick="loadCategory('16', this)">🎨 أنيميشن</div>
+        <div class="nav-item" onclick="loadCategory('28', this)">💥 أكشن</div>
+        <div class="nav-item" onclick="loadCategory('35', this)">😂 كوميدي</div>
+        <div class="nav-item" onclick="loadCategory('18', this)">🎭 دراما</div>
+        <div class="nav-item" onclick="loadCategory('27', this)">👻 رعب</div>
+      </div>
+
+      <!-- تصنيفات القنوات المباشرة -->
+      <div id="liveSidebar" style="display:none;">
+        <div class="section-title">باقات القنوات</div>
+        <div class="nav-item active" onclick="loadLivePlaylist('https://iptv-org.github.io/iptv/countries/eg.m3u', this)">🇪🇬 قنوات مصرية</div>
+        <div class="nav-item" onclick="loadLivePlaylist('https://iptv-org.github.io/iptv/languages/ara.m3u', this)">🌍 قنوات عربية</div>
+      </div>
     </div>
 
-    <!-- تصنيفات القنوات المباشرة -->
-    <div id="liveSidebar" style="display:none;">
-      <div class="section-title">باقات القنوات</div>
-      <div class="nav-item active" onclick="loadLivePlaylist('https://iptv-org.github.io/iptv/countries/eg.m3u', this)">🇪🇬 قنوات مصرية</div>
-      <div class="nav-item" onclick="loadLivePlaylist('https://iptv-org.github.io/iptv/languages/ara.m3u', this)">🌍 قنوات عربية</div>
+    <!-- زر الفلتر العائلي -->
+    <div class="sidebar-footer">
+      <span>🛡️ الفلتر العائلي</span>
+      <label class="switch" title="تشغيل/إيقاف الفلتر العائلي">
+        <input type="checkbox" id="familyToggle" checked onchange="handleFamilyToggle(this)" />
+        <span class="slider"></span>
+      </label>
     </div>
   </aside>
 
   <!-- المحتوى الرئيسي -->
   <main class="main">
     <header class="topbar">
-      <h2 id="pageTitle">🔥 الأكثر شهرة</h2>
+      <div class="topbar-right">
+        <button class="menu-btn" onclick="toggleSidebar(true)" aria-label="القائمة">☰</button>
+        <h2 id="pageTitle">🔥 الأكثر شهرة</h2>
+      </div>
       <input type="text" id="searchInput" class="search-box" placeholder="ابحث هنا..." oninput="handleSearch()" />
     </header>
 
@@ -286,7 +453,7 @@
     <div class="modal-header">
       <h3 id="playerTitle">تشغيل</h3>
       <div class="modal-controls">
-        <div id="vodControls" style="display:flex; align-items:center; gap:8px;">
+        <div id="vodControls" style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
           <div id="seriesControls" style="display:none; align-items:center; gap:6px;">
             <span>موسم:</span>
             <input type="number" id="seasonInput" class="ctrl-input" value="1" min="1" onchange="updatePlayerUrl()" />
@@ -295,19 +462,25 @@
           </div>
           <button class="ctrl-btn active" id="srv1" onclick="changeServer(1)">سيرفر 1</button>
           <button class="ctrl-btn" id="srv2" onclick="changeServer(2)">سيرفر 2</button>
+          <button class="ctrl-btn shield-on" id="popupShieldBtn" onclick="togglePopupShield()" title="يمنع فتح النوافذ الإعلانية المنبثقة">🛡️ منع النوافذ: مفعّل</button>
         </div>
         <button class="ctrl-btn close-btn" onclick="closePlayer()">✖ إغلاق</button>
       </div>
     </div>
-    <iframe id="videoFrame" class="player-frame" allowfullscreen allow="autoplay; fullscreen"></iframe>
+    <div id="playerContainer" class="player-container"></div>
     <video id="liveVideo" class="live-video" controls autoplay style="display:none;"></video>
   </div>
 
   <script>
     // =========================================================
-    // ضع مفتاح TMDB الخاص بك هنا مرة أخرى
+    // 1. ضع مفتاح TMDB الخاص بك هنا
     // =========================================================
-    const TMDB_API_KEY = "7122eb8cf2dec94283457122f73d10c7";
+    const TMDB_API_KEY = "ضع_مفتاح_TMDB_هنا";
+
+    // =========================================================
+    // 2. الرقم السري لإيقاف الفلتر العائلي (يمكنك تغييره لأي رقم)
+    // =========================================================
+    const FAMILY_PIN = "1234";
 
     const IMG_BASE = "https://image.tmdb.org/t/p/w500";
     let currentType = 'movie';
@@ -315,8 +488,45 @@
     let searchTimer = null;
     let currentPlaying = { id: null, type: 'movie', server: 1 };
     let favorites = JSON.parse(localStorage.getItem('myCinemaFavs') || '[]');
+    let familyFilterEnabled = localStorage.getItem('myCinemaFamilyFilter') !== 'false';
+    let popupShieldEnabled = true;
     let liveChannels = [];
     let hlsInstance = null;
+
+    // ضبط حالة زر الفلتر عند فتح الصفحة
+    document.getElementById('familyToggle').checked = familyFilterEnabled;
+
+    function handleFamilyToggle(checkbox) {
+      if (!checkbox.checked) {
+        // طلب الرقم السري عند محاولة إيقاف الفلتر
+        const enteredPin = prompt("أدخل الرقم السري لإيقاف الفلتر العائلي:");
+        if (enteredPin === FAMILY_PIN) {
+          familyFilterEnabled = false;
+          localStorage.setItem('myCinemaFamilyFilter', 'false');
+          refreshCurrentView();
+        } else {
+          checkbox.checked = true; // إعادة الزر لوضع التشغيل
+          if (enteredPin !== null) alert("الرقم السري غير صحيح!");
+        }
+      } else {
+        // تفعيل الفلتر مباشرة بدون رقم سري
+        familyFilterEnabled = true;
+        localStorage.setItem('myCinemaFamilyFilter', 'true');
+        refreshCurrentView();
+      }
+    }
+
+    function refreshCurrentView() {
+      if (currentType === 'live') return;
+      const query = document.getElementById('searchInput').value.trim();
+      if (query) handleSearch();
+      else fetchContent();
+    }
+
+    function toggleSidebar(open) {
+      document.getElementById('sidebar').classList.toggle('open', open);
+      document.getElementById('sidebarOverlay').classList.toggle('open', open);
+    }
 
     function switchTab(type, btn) {
       currentType = type;
@@ -342,6 +552,7 @@
       el.classList.add('active');
       document.getElementById('pageTitle').textContent = el.textContent.trim();
       document.getElementById('searchInput').value = '';
+      toggleSidebar(false);
       fetchContent();
     }
 
@@ -349,6 +560,7 @@
       document.querySelectorAll('#vodSidebar .nav-item').forEach(item => item.classList.remove('active'));
       el.classList.add('active');
       document.getElementById('pageTitle').textContent = '⭐ المفضلة';
+      toggleSidebar(false);
       renderCards(favorites);
     }
 
@@ -362,25 +574,27 @@
 
       clearTimeout(searchTimer);
       if (!query) { fetchContent(); return; }
+      const adultParam = familyFilterEnabled ? '&include_adult=false' : '&include_adult=true';
       searchTimer = setTimeout(() => {
-        const url = `https://api.themoviedb.org/3/search/${currentType}?api_key=${TMDB_API_KEY}&language=ar&query=${encodeURIComponent(query)}`;
+        const url = `https://api.themoviedb.org/3/search/${currentType}?api_key=${TMDB_API_KEY}&language=ar${adultParam}&query=${encodeURIComponent(query)}`;
         loadFromUrl(url);
       }, 450);
     }
 
     function fetchContent() {
-      if (TMDB_API_KEY === "ضع_مفتاح_TMDB_هنا" || !TMDB_API_KEY) {
+      if (TMDB_API_KEY === "7122eb8cf2dec94283457122f73d10c7" || !TMDB_API_KEY) {
         document.getElementById('contentGrid').innerHTML =
           '<div class="status-msg">⚠️ من فضلك ضع مفتاح TMDB_API_KEY داخل الكود أولاً ثم أعد تحميل الصفحة.</div>';
         return;
       }
+      const adultParam = familyFilterEnabled ? '&include_adult=false' : '&include_adult=true';
       let url = '';
       if (currentCategory === 'popular') {
-        url = `https://api.themoviedb.org/3/${currentType}/popular?api_key=${TMDB_API_KEY}&language=ar`;
+        url = `https://api.themoviedb.org/3/discover/${currentType}?api_key=${TMDB_API_KEY}&language=ar${adultParam}&sort_by=popularity.desc`;
       } else if (currentCategory === 'arabic') {
-        url = `https://api.themoviedb.org/3/discover/${currentType}?api_key=${TMDB_API_KEY}&language=ar&with_original_language=ar&sort_by=popularity.desc`;
+        url = `https://api.themoviedb.org/3/discover/${currentType}?api_key=${TMDB_API_KEY}&language=ar${adultParam}&with_original_language=ar&sort_by=popularity.desc`;
       } else {
-        url = `https://api.themoviedb.org/3/discover/${currentType}?api_key=${TMDB_API_KEY}&language=ar&with_genres=${currentCategory}&sort_by=popularity.desc`;
+        url = `https://api.themoviedb.org/3/discover/${currentType}?api_key=${TMDB_API_KEY}&language=ar${adultParam}&with_genres=${currentCategory}&sort_by=popularity.desc`;
       }
       loadFromUrl(url);
     }
@@ -391,11 +605,15 @@
       try {
         const res = await fetch(url);
         const data = await res.json();
-        if (!data.results || data.results.length === 0) {
+        let results = data.results || [];
+        if (familyFilterEnabled) {
+          results = results.filter(item => item.adult !== true);
+        }
+        if (results.length === 0) {
           grid.innerHTML = '<div class="status-msg">لا توجد نتائج مطابقة.</div>';
           return;
         }
-        renderCards(data.results);
+        renderCards(results);
       } catch (err) {
         grid.innerHTML = '<div class="status-msg">حدث خطأ في الاتصال بالإنترنت.</div>';
       }
@@ -448,6 +666,7 @@
         el.classList.add('active');
         document.getElementById('pageTitle').textContent = el.textContent.trim();
       }
+      toggleSidebar(false);
       const grid = document.getElementById('contentGrid');
       grid.innerHTML = '<div class="status-msg">جاري تحميل القنوات المباشرة...</div>';
 
@@ -504,13 +723,13 @@
       `).join('');
     }
 
-    /* ==================== مشغّل الفيديو ==================== */
+    /* ==================== مشغّل الفيديو ومنع النوافذ المنبثقة ==================== */
     function openVodPlayer(id, type, title) {
       currentPlaying = { id, type, server: 1 };
       document.getElementById('playerTitle').textContent = title;
       document.getElementById('vodControls').style.display = 'flex';
       document.getElementById('seriesControls').style.display = (type === 'tv') ? 'flex' : 'none';
-      document.getElementById('videoFrame').style.display = 'block';
+      document.getElementById('playerContainer').style.display = 'flex';
       document.getElementById('liveVideo').style.display = 'none';
       document.getElementById('seasonInput').value = 1;
       document.getElementById('episodeInput').value = 1;
@@ -518,11 +737,19 @@
       changeServer(1);
     }
 
+    function togglePopupShield() {
+      popupShieldEnabled = !popupShieldEnabled;
+      const btn = document.getElementById('popupShieldBtn');
+      btn.classList.toggle('shield-on', popupShieldEnabled);
+      btn.textContent = popupShieldEnabled ? '🛡️ منع النوافذ: مفعّل' : '🛡️ منع النوافذ: متوقف';
+      updatePlayerUrl();
+    }
+
     function openLivePlayer(streamUrl, title) {
       document.getElementById('playerTitle').textContent = '📺 ' + title;
       document.getElementById('vodControls').style.display = 'none';
-      document.getElementById('videoFrame').style.display = 'none';
-      document.getElementById('videoFrame').src = '';
+      document.getElementById('playerContainer').style.display = 'none';
+      document.getElementById('playerContainer').innerHTML = '';
 
       const video = document.getElementById('liveVideo');
       video.style.display = 'block';
@@ -562,12 +789,25 @@
           ? `https://vidsrc.to/embed/movie/${id}`
           : `https://vidsrc.to/embed/tv/${id}/${s}/${e}`;
       }
-      document.getElementById('videoFrame').src = url;
+
+      // إعادة بناء الإطار لتطبيق أو إزالة حماية النوافذ المنبثقة فوراً
+      const container = document.getElementById('playerContainer');
+      container.innerHTML = '';
+      const iframe = document.createElement('iframe');
+      iframe.className = 'player-frame';
+      iframe.allowFullscreen = true;
+      iframe.allow = 'autoplay; fullscreen';
+      iframe.referrerPolicy = 'no-referrer';
+      if (popupShieldEnabled) {
+        iframe.sandbox = 'allow-scripts allow-same-origin allow-forms allow-presentation';
+      }
+      iframe.src = url;
+      container.appendChild(iframe);
     }
 
     function closePlayer() {
       document.getElementById('playerModal').classList.remove('open');
-      document.getElementById('videoFrame').src = '';
+      document.getElementById('playerContainer').innerHTML = '';
       const video = document.getElementById('liveVideo');
       video.pause();
       video.src = '';
@@ -575,7 +815,10 @@
     }
 
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') closePlayer();
+      if (e.key === 'Escape') {
+        closePlayer();
+        toggleSidebar(false);
+      }
     });
 
     fetchContent();
