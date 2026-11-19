@@ -472,14 +472,7 @@
   </div>
 
   <script>
-    // =========================================================
-    // 1. ضع مفتاح TMDB الخاص بك هنا
-    // =========================================================
-    const TMDB_API_KEY = "ضع_مفتاح_TMDB_هنا";
-
-    // =========================================================
-    // 2. الرقم السري لإيقاف الفلتر العائلي (يمكنك تغييره لأي رقم)
-    // =========================================================
+    const TMDB_API_KEY = "7122eb8cf2dec94283457122f73d10c7";
     const FAMILY_PIN = "1234";
 
     const IMG_BASE = "https://image.tmdb.org/t/p/w500";
@@ -493,23 +486,20 @@
     let liveChannels = [];
     let hlsInstance = null;
 
-    // ضبط حالة زر الفلتر عند فتح الصفحة
     document.getElementById('familyToggle').checked = familyFilterEnabled;
 
     function handleFamilyToggle(checkbox) {
       if (!checkbox.checked) {
-        // طلب الرقم السري عند محاولة إيقاف الفلتر
         const enteredPin = prompt("أدخل الرقم السري لإيقاف الفلتر العائلي:");
         if (enteredPin === FAMILY_PIN) {
           familyFilterEnabled = false;
           localStorage.setItem('myCinemaFamilyFilter', 'false');
           refreshCurrentView();
         } else {
-          checkbox.checked = true; // إعادة الزر لوضع التشغيل
+          checkbox.checked = true;
           if (enteredPin !== null) alert("الرقم السري غير صحيح!");
         }
       } else {
-        // تفعيل الفلتر مباشرة بدون رقم سري
         familyFilterEnabled = true;
         localStorage.setItem('myCinemaFamilyFilter', 'true');
         refreshCurrentView();
@@ -582,11 +572,6 @@
     }
 
     function fetchContent() {
-      if (TMDB_API_KEY === "7122eb8cf2dec94283457122f73d10c7" || !TMDB_API_KEY) {
-        document.getElementById('contentGrid').innerHTML =
-          '<div class="status-msg">⚠️ من فضلك ضع مفتاح TMDB_API_KEY داخل الكود أولاً ثم أعد تحميل الصفحة.</div>';
-        return;
-      }
       const adultParam = familyFilterEnabled ? '&include_adult=false' : '&include_adult=true';
       let url = '';
       if (currentCategory === 'popular') {
@@ -605,6 +590,10 @@
       try {
         const res = await fetch(url);
         const data = await res.json();
+        if (data.status_message) {
+          grid.innerHTML = `<div class="status-msg">⚠️ خطأ من TMDB: ${data.status_message}</div>`;
+          return;
+        }
         let results = data.results || [];
         if (familyFilterEnabled) {
           results = results.filter(item => item.adult !== true);
@@ -790,7 +779,6 @@
           : `https://vidsrc.to/embed/tv/${id}/${s}/${e}`;
       }
 
-      // إعادة بناء الإطار لتطبيق أو إزالة حماية النوافذ المنبثقة فوراً
       const container = document.getElementById('playerContainer');
       container.innerHTML = '';
       const iframe = document.createElement('iframe');
